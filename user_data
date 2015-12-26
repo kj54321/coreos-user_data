@@ -1,0 +1,63 @@
+#cloud-config
+
+hostname: xxxx.com
+
+coreos:
+  update:
+    reboot-strategy: best-effort
+
+  units:
+  - name: sshd.socket
+    command: start
+    content: |
+      [Socket]
+      ListenStream=xxxx
+      Accept=yes
+
+  - name: settimezone.service
+    command: start
+    content: |
+      [Unit]
+      Description=Set the timezone
+      [Service]
+      ExecStart=/usr/bin/timedatectl set-timezone Asia/Tokyo
+      RemainAfterExit=yes
+      Type=oneshot
+
+write_files:
+  - path: /etc/systemd/network/static.network
+    permissions: 0644
+    content: |
+      [Match]
+      Name=ens3
+      [Network]
+      Address=xxx.xxx.xxx.xxx/xx
+      Gateway=xxx.xxx.xxx.xxx
+      DNS=xxx.xxx.xxx.xxx
+      DNS=xxx.xxx.xxx.xxx
+
+  - path: /etc/ssh/sshd_config
+    content: |
+      # Use most defaults for sshd configuration.
+      UsePrivilegeSeparation sandbox
+      Subsystem sftp internal-sftp
+
+      PermitRootLogin no
+      MaxAuthTries 1
+      PasswordAuthentication no
+      ChallengeResponseAuthentication no
+      PermitEmptyPasswords no
+      AllowUsers xxxxx
+
+users:
+  - name: core
+    passwd: xxxxxxxxxx
+    groups:
+      - sudo
+      - docker
+
+  - name: ope
+    gecos: SSH Login User
+    ssh_authorized_keys:
+      - ssh-ed25519 xxxxxxxxxx
+
